@@ -12,10 +12,50 @@ import csv
 
 fileNameString = "output file name"
 serialNumberString = "12345"
-testTime = 10
+duration = 10
 samplingRate = 0.01
 
 def runFunction():
+
+    global serialNumberString
+    global duration
+    global samplingRate
+
+    try:
+        serialNumberString = SerialNumber_Box.get()
+        duration = int(Duration_Box.get())
+        samplingRate = float(samplingRate_Box.get())
+    except Exception:
+        print("ERROR: Invalid inputs. Values must be greater than zero and not empty.")
+        return
+
+    if not ( (samplingRate <= 1) or (samplingRate >= 0) ):
+        print("ERROR: Sampling rate must be greater than zero and less than 1.")
+        return        
+    
+    if not ( (duration < 30) or (duration > samplingRate) ):
+        print("ERROR: Duration must be greater than the sampling rate and less than 30 seconds.")
+        return    
+
+    print("                      ")
+    print("======================")
+    print(" TEST CONFIGURATION   ")
+    print("======================")
+    print("                      ")
+    print("Serial Number: " + str(serialNumberString))
+    print("Duration:      " + str(duration))
+    print("Sampling Rate: " + str(samplingRate))
+    print("                      ")
+
+    global testStartTime
+    global fileNameString
+    testStartTime = time.strftime('%Y-%m-%d %H-%M-%S')
+    fileNameString = testStartTime + " " + 'SN' + str(serialNumberString)
+
+    # dataCollection()
+    # exportData()
+    # plotData()  
+
     return
 
 def callback (input) :
@@ -46,7 +86,7 @@ if __name__=="__main__":
 
     Duration_Box = Entry(mainframe, width=10, font=("Arial", 16))
     Duration_Box.grid(row=2, column=2)
-    Duration_Box.insert(0,testTime)
+    Duration_Box.insert(0,duration)
     
     samplingRate_Box = Entry(mainframe, width=10, font=("Arial", 16))
     samplingRate_Box.grid(row=3, column=2)
