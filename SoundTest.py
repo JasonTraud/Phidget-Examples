@@ -2,8 +2,7 @@ from tkinter import *
 from tkinter import ttk, font
 
 from Phidget22.Phidget import *
-from Phidget22.Devices.VoltageInput import *
-from Phidget22.Devices.DigitalOutput import *
+from Phidget22.Devices.SoundSensor import *
 
 import time
 import numpy as np
@@ -14,6 +13,9 @@ fileNameString = "output file name"
 serialNumberString = "12345"
 duration = 10
 samplingRate = 0.01
+
+soundDataArray = []
+sampleTimeArray = []
 
 def runFunction():
 
@@ -27,11 +29,11 @@ def runFunction():
         samplingRate = float(samplingRate_Box.get())
     except Exception:
         print("ERROR: Invalid inputs. Values must be greater than zero and not empty.")
-        return
-
-    if not ( (samplingRate <= 1) or (samplingRate >= 0) ):
-        print("ERROR: Sampling rate must be greater than zero and less than 1.")
-        return        
+        return     
+    
+    if not ( (samplingRate < 30) or (samplingRate > 0.005) ):
+        print("ERROR: Sampling rate must be less than 1 and greater than 5ms.")
+        return    
     
     if not ( (duration < 30) or (duration > samplingRate) ):
         print("ERROR: Duration must be greater than the sampling rate and less than 30 seconds.")
@@ -52,10 +54,63 @@ def runFunction():
     testStartTime = time.strftime('%Y-%m-%d %H-%M-%S')
     fileNameString = testStartTime + " " + 'SN' + str(serialNumberString)
 
-    # dataCollection()
-    # exportData()
+    dataCollection()
+    exportData()
     # plotData()  
 
+    return
+
+def dataCollection():
+    # Attempt to connect to Phidets
+    try:
+        SoundSensor0  = SoundSensor()
+        SoundSensor0.setHubPort(0)
+        SoundSensor0.openWaitForAttachment(5000)
+        SoundSensor0.setDataRate(SoundSensor0.getMaxDataRate())
+
+    except:
+        print("ERROR: Phidgets not attached.")
+        return
+    
+    global soundDataArray
+    global sampleTimeArray
+    global duration
+
+    del soundDataArray[:]
+    del sampleTimeArray[:]
+
+    testStartTime = time.time()    
+
+    currentTime = time.time()
+    while currentTime - testStartTime < duration:
+        soundDataArray.append(SoundSensor0.getdBA())
+        sampleTimeArray.append(currentTime - testStartTime)
+        time.sleep(samplingRate)
+        currentTime = time.time()
+    
+    SoundSensor0.close()
+    return
+
+def exportData():
+
+    global soundDataArray
+    global sampleTimeArray
+    global fileNameString
+
+    f = open(fileNameString + " Data.csv", "w", newline='', encoding='utf-8')
+    c = csv.writer(f)
+
+    header = ['Sample', 'Elapsed', 'dbA']
+    c.writerow(header)
+    
+    Sample = 0
+
+    for index, item in enumerate(sampleTimeArray):
+        data = [Sample,sampleTimeArray[index],soundDataArray[index]]
+        c.writerow(data)
+        Sample = Sample + 1
+        
+    f.close()
     return
 
 def callback (input) :
