@@ -31,8 +31,8 @@ def runFunction():
         print("ERROR: Invalid inputs. Values must be greater than zero and not empty.")
         return     
     
-    if not ( (samplingRate < 30) or (samplingRate > 0.005) ):
-        print("ERROR: Sampling rate must be less than 1 and greater than 5ms.")
+    if not ( (samplingRate < 30) or (samplingRate > 0.001) ):
+        print("ERROR: Sampling rate must be less than 1 and greater than 1ms.")
         return    
     
     if not ( (duration < 30) or (duration > samplingRate) ):
@@ -56,7 +56,7 @@ def runFunction():
 
     dataCollection()
     exportData()
-    # plotData()  
+    plotData()  
 
     return
 
@@ -111,6 +111,28 @@ def exportData():
         Sample = Sample + 1
         
     f.close()
+    return
+
+def plotData():
+
+    global soundDataArray
+    global sampleTimeArray
+    global fileNameString
+    
+    plt.close('all')                                     # Close existing plots for subsequent runs
+    plt.figure(figsize=(8,4),num="Output Data Plot")     # Set size and title
+    
+    # plot our data    
+    plt.plot(sampleTimeArray,soundDataArray)
+
+    # Format
+    plt.title('SN' + str(serialNumberString) + ' Output Data Plot')
+    plt.xlabel('Time')
+    plt.ylabel('dbA')
+    
+    plt.tight_layout()
+    plt.savefig(fileNameString+'.png')
+    plt.show()
     return
 
 def callback (input) :
